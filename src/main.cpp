@@ -1,3 +1,18 @@
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/*    Module:       main.cpp                                                  */
+/*    Author:       VEX                                                       */
+/*    Created:      Thu Sep 26 2019                                           */
+/*    Description:  Competition Template                                      */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+
+// ---- START VEXCODE CONFIGURED DEVICES ----
+// Robot Configuration:
+// [Name]               [Type]        [Port(s)]
+// Controller1          controller                    
+// ---- END VEXCODE CONFIGURED DEVICES ----
+
 #include "vex.h"
 
 using namespace vex;
@@ -32,11 +47,11 @@ motor_group intakeMotors(intakeMotor1, intakeMotor2);
 motor_group liftMotors(liftMotor1, liftMotor2);
 motor_group clampMotors(clampMotor1, clampMotor2);
 
-// Pre-Autonomous Functions
 void pre_auton(void) {
+  // Initializing Robot Configuration. DO NOT REMOVE!
   vexcodeInit();
 
-  // Set all motors to brake mode for better control
+   // Set all motors to brake mode for better control
   leftMotors.setStopping(brakeType::brake);
   rightMotors.setStopping(brakeType::brake);
   intakeMotors.setStopping(brakeType::hold);
@@ -60,9 +75,18 @@ void pre_auton(void) {
   hookMotor.setVelocity(50, percent); // Slowest for fine control
 }
 
-// Autonomous Task
+/*---------------------------------------------------------------------------*/
+/*                                                                           */
+/*                              Autonomous Task                              */
+/*                                                                           */
+/*  This task is used to control your robot during the autonomous phase of   */
+/*  a VEX Competition.                                                       */
+/*                                                                           */
+/*  You must modify the code to add your own robot specific commands here.   */
+/*---------------------------------------------------------------------------*/
+
 void autonomous(void) {
-  // Example autonomous routine
+// Example autonomous routine
   // Move forward for 3 seconds
   leftMotors.spin(forward, 100, percent);
   rightMotors.spin(forward, 100, percent);
@@ -93,9 +117,18 @@ void autonomous(void) {
   rightMotors.stop();
 }
 
-// User Control Task
+/*---------------------------------------------------------------------------*/
+/*                                                                           */
+/*                              User Control Task                            */
+/*                                                                           */
+/*  This task is used to control your robot during the user control phase of */
+/*  a VEX Competition.                                                       */
+/*                                                                           */
+/*  You must modify the code to add your own robot specific commands here.   */
+/*---------------------------------------------------------------------------*/
+
 void usercontrol(void) {
-  controller Controller1;
+   controller Controller1;
 
   while (1) {
     // Drivetrain control: Tank drive
@@ -144,14 +177,22 @@ void usercontrol(void) {
   }
 }
 
-// Main function
+//
+// Main will set up the competition functions and callbacks.
+//
 int main() {
+  // Set up callbacks for autonomous and driver control periods.
   Competition.autonomous(autonomous);
   Competition.drivercontrol(usercontrol);
 
+  // Run the pre-autonomous function.
   pre_auton();
 
+  // Prevent main from exiting with an infinite loop.
   while (true) {
     wait(100, msec);
   }
 }
+
+
+
