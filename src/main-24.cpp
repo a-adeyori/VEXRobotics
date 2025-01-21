@@ -23,11 +23,11 @@ competition Competition;
 // Define drivetrain motors (6 motors, 3 left, 3 right)
 motor leftMotor1(PORT1, gearSetting::ratio18_1, false);
 motor leftMotor2(PORT2, gearSetting::ratio18_1, false);
-motor leftMotor3(PORT3, gearSetting::ratio18_1, false);
+motor leftMotor3(PORT3, gearSetting::ratio18_1, true);
 
 motor rightMotor1(PORT4, gearSetting::ratio18_1, true);
 motor rightMotor2(PORT5, gearSetting::ratio18_1, true);
-motor rightMotor3(PORT6, gearSetting::ratio18_1, true);
+motor rightMotor3(PORT6, gearSetting::ratio18_1, false);
 
 // Define intake motors
 motor intakeMotor1(PORT7, gearSetting::ratio18_1, false);
@@ -135,6 +135,7 @@ void usercontrol(void) {
     int leftSpeed = Controller1.Axis3.position(); // Left joystick
     int rightSpeed = Controller1.Axis2.position(); // Right joystick
     leftMotors.spin(forward, leftSpeed, percent);
+
     rightMotors.spin(forward, rightSpeed, percent);
 
     // Intake control
