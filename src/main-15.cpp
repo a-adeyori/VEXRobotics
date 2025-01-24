@@ -29,49 +29,50 @@ motor rightMotor1(PORT4, gearSetting::ratio18_1, true);
 motor rightMotor2(PORT5, gearSetting::ratio18_1, true);
 motor rightMotor3(PORT6, gearSetting::ratio18_1, true);
 
-// Define lift motors (4 high-torque motors)
-motor liftMotor1(PORT7, gearSetting::ratio36_1, false);
-motor liftMotor2(PORT8, gearSetting::ratio36_1, true);
-motor liftMotor3(PORT9, gearSetting::ratio36_1, false);
-motor liftMotor4(PORT10, gearSetting::ratio36_1, true);
+// Define intake motors
+motor intakeMotor1(PORT7, gearSetting::ratio18_1, false);
+motor intakeMotor2(PORT8, gearSetting::ratio18_1, true);
 
-// Define claw motors (2 normal motors)
-motor clawMotor1(PORT11, gearSetting::ratio18_1, false);
-motor clawMotor2(PORT12, gearSetting::ratio18_1, true);
-
-// Define clamp motor (1 high-speed motor)
-motor clampMotor(PORT13, gearSetting::ratio6_1, false);
+// Define group motors: Lift (2 motors), Clamps (2 motors), Hook (1 motor)
+motor liftMotor1(PORT9, gearSetting::ratio36_1, false);
+motor liftMotor2(PORT10, gearSetting::ratio36_1, true);
+motor clampMotor1(PORT11, gearSetting::ratio18_1, false);
+motor clampMotor2(PORT12, gearSetting::ratio18_1, true);
+motor hookMotor(PORT13, gearSetting::ratio6_1, false);
 
 // Group motors into motor groups for easier control
 motor_group leftMotors(leftMotor1, leftMotor2, leftMotor3);
 motor_group rightMotors(rightMotor1, rightMotor2, rightMotor3);
-motor_group liftMotors(liftMotor1, liftMotor2, liftMotor3, liftMotor4);
-motor_group clawMotors(clawMotor1, clawMotor2);
-motor_group clampMotorGroup(clampMotor);
+motor_group intakeMotors(intakeMotor1, intakeMotor2);
+motor_group liftMotors(liftMotor1, liftMotor2);
+motor_group clampMotors(clampMotor1, clampMotor2);
 
 void pre_auton(void) {
   // Initializing Robot Configuration. DO NOT REMOVE!
   vexcodeInit();
 
-  // Set all motors to brake mode for better control
+   // Set all motors to brake mode for better control
   leftMotors.setStopping(brakeType::brake);
   rightMotors.setStopping(brakeType::brake);
+  intakeMotors.setStopping(brakeType::hold);
   liftMotors.setStopping(brakeType::hold);
-  clawMotors.setStopping(brakeType::hold);
-  clampMotorGroup.setStopping(brakeType::hold);
+  clampMotors.setStopping(brakeType::hold);
+  hookMotor.setStopping(brakeType::hold);
 
   // Set max torque and velocity
   leftMotors.setMaxTorque(100, percent);
   rightMotors.setMaxTorque(100, percent);
+  intakeMotors.setMaxTorque(100, percent);
   liftMotors.setMaxTorque(100, percent);
-  clawMotors.setMaxTorque(100, percent);
-  clampMotorGroup.setMaxTorque(100, percent);
+  clampMotors.setMaxTorque(100, percent);
+  hookMotor.setMaxTorque(100, percent);
 
   leftMotors.setVelocity(100, percent);
   rightMotors.setVelocity(100, percent);
+  intakeMotors.setVelocity(100, percent);
   liftMotors.setVelocity(75, percent); // Slower for precision
-  clawMotors.setVelocity(100, percent);
-  clampMotorGroup.setVelocity(100, percent); // High-speed motor
+  clampMotors.setVelocity(75, percent);
+  hookMotor.setVelocity(50, percent); // Slowest for fine control
 }
 
 /*---------------------------------------------------------------------------*/
@@ -85,26 +86,31 @@ void pre_auton(void) {
 /*---------------------------------------------------------------------------*/
 
 void autonomous(void) {
-  // Example autonomous routine
+// Example autonomous routine
   // Move forward for 3 seconds
   leftMotors.spin(forward, 100, percent);
   rightMotors.spin(forward, 100, percent);
   wait(3, seconds);
 
-  // Lift operation
+  // Intake operation for 2 seconds
+  intakeMotors.spin(forward, 100, percent);
+  wait(2, seconds);
+  intakeMotors.stop();
+
+  // Lift operation to lift an object
   liftMotors.spin(forward, 75, percent);
   wait(2, seconds);
   liftMotors.stop();
 
-  // Claw operation to grab an object
-  clawMotors.spin(forward, 100, percent);
-  wait(1, seconds);
-  clawMotors.stop();
-
   // Clamp operation to grab an object
-  clampMotorGroup.spin(forward, 100, percent);
+  clampMotors.spin(forward, 50, percent);
   wait(1, seconds);
-  clampMotorGroup.stop();
+  clampMotors.stop();
+
+  // Hook operation
+  hookMotor.spin(forward, 25, percent);
+  wait(1, seconds);
+  hookMotor.stop();
 
   // Stop drivetrain
   leftMotors.stop();
@@ -122,14 +128,24 @@ void autonomous(void) {
 /*---------------------------------------------------------------------------*/
 
 void usercontrol(void) {
-  controller Controller1;
+   controller Controller1;
 
   while (1) {
     // Drivetrain control: Tank drive
     int leftSpeed = Controller1.Axis3.position(); // Left joystick
     int rightSpeed = Controller1.Axis2.position(); // Right joystick
-    leftMotors.spin(forward, leftSpeed, percent);
-    rightMotors.spin(forward, rightSpeed, percent);
+    leftMotors.spin(reverse, leftSpeed, percent);
+
+    rightMotors.spin(reverse, rightSpeed, percent);
+
+    // Intake control
+    if (Controller1.ButtonR1.pressing()) {
+      intakeMotors.spin(forward, 100, percent);
+    } else if (Controller1.ButtonR2.pressing()) {
+      intakeMotors.spin(reverse, 100, percent);
+    } else {
+      intakeMotors.stop();
+    }
 
     // Lift control
     if (Controller1.ButtonL1.pressing()) {
@@ -140,22 +156,22 @@ void usercontrol(void) {
       liftMotors.stop();
     }
 
-    // Claw control
-    if (Controller1.ButtonR1.pressing()) {
-      clawMotors.spin(forward, 100, percent);
-    } else if (Controller1.ButtonR2.pressing()) {
-      clawMotors.spin(reverse, 100, percent);
-    } else {
-      clawMotors.stop();
-    }
-
     // Clamp control
     if (Controller1.ButtonX.pressing()) {
-      clampMotorGroup.spin(forward, 100, percent);
+      clampMotors.spin(forward, 50, percent);
     } else if (Controller1.ButtonB.pressing()) {
-      clampMotorGroup.spin(reverse, 100, percent);
+      clampMotors.spin(reverse, 50, percent);
     } else {
-      clampMotorGroup.stop();
+      clampMotors.stop();
+    }
+
+    // Hook control
+    if (Controller1.ButtonUp.pressing()) {
+      hookMotor.spin(forward, 25, percent);
+    } else if (Controller1.ButtonDown.pressing()) {
+      hookMotor.spin(reverse, 25, percent);
+    } else {
+      hookMotor.stop();
     }
 
     wait(20, msec); // Prevent wasted resources
@@ -178,3 +194,6 @@ int main() {
     wait(100, msec);
   }
 }
+
+
+
