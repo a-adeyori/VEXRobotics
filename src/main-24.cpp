@@ -132,8 +132,8 @@ void usercontrol(void) {
 
   while (1) {
     // Drivetrain control: Tank drive
-    int leftSpeed = Controller1.Axis3.position(); // Left joystick
-    int rightSpeed = Controller1.Axis2.position(); // Right joystick
+    int leftSpeed = Controller1.Axis2.position(); // Left joystick
+    int rightSpeed = Controller1.Axis3.position(); // Right joystick
     leftMotors.spin(forward, leftSpeed, percent);
 
     rightMotors.spin(forward, rightSpeed, percent);
